@@ -295,6 +295,41 @@ body {
   display: contents;
 }
 
+.part-selector {
+  display: flex;
+  background: var(--bg-nav);
+  padding: 6px;
+  border-radius: 30px;
+  border: 1px solid var(--border-nav);
+  gap: 4px;
+}
+
+.part-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.part-btn:hover {
+  color: var(--text-primary);
+}
+
+.part-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.part-btn.active:hover {
+  color: #ffffff;
+}
+
 .app-nav {
   display: flex;
   background: var(--bg-nav);
@@ -1398,6 +1433,8 @@ kbd {
   
   .header-nav-wrapper {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     gap: 12px;
   }

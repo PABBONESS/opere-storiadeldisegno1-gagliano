@@ -4,6 +4,7 @@ let currentIndex = 0;
 let isFlipped = false;
 let isShuffled = false;
 let studyFilter = 'all'; // 'all', 'known', 'unknown', 'starred'
+let selectedPart = 'all'; // 'all', '1', '2'
 
 // User sets (stored by item ID)
 let knownSet = new Set();
@@ -72,6 +73,14 @@ const modalCloseBackdrop = document.getElementById('modal-close-backdrop');
 function init() {
   loadState();
   loadTheme();
+  
+  // Set active class on loaded part button
+  const activeBtn = document.querySelector(`.part-btn[data-part="${selectedPart}"]`);
+  if (activeBtn) {
+    document.querySelectorAll('.part-btn').forEach(btn => btn.classList.remove('active'));
+    activeBtn.classList.add('active');
+  }
+  
   buildFilters();
   initDeck();
   renderCard();
@@ -86,6 +95,7 @@ function loadState() {
     const known = localStorage.getItem('gagliano_known');
     const unknown = localStorage.getItem('gagliano_unknown');
     const starred = localStorage.getItem('gagliano_starred');
+    selectedPart = localStorage.getItem('gagliano_selected_part') || 'all';
     
     if (known) knownSet = new Set(JSON.parse(known));
     if (unknown) unknownSet = new Set(JSON.parse(unknown));
@@ -154,13 +164,28 @@ function toggleTheme() {
   }
 }
 
-// Build dropdown options dynamically from OPERE_DATA
+// Build dropdown options dynamically from OPERE_DATA, filtered by selectedPart
 function buildFilters() {
+  // Salva i valori attualmente selezionati
+  const prevAuthor = filterAuthor.value;
+  const prevPeriod = filterPeriod.value;
+  const prevTech = filterTechnique.value;
+
+  // Svuota i menu a tendina tranne la prima opzione
+  filterAuthor.innerHTML = '<option value="">Tutti gli autori</option>';
+  filterPeriod.innerHTML = '<option value="">Tutti i periodi</option>';
+  filterTechnique.innerHTML = '<option value="">Tutte le tecniche</option>';
+
   const authors = new Set();
   const periods = new Set();
   const techniques = new Set();
   
-  OPERE_DATA.forEach(item => {
+  // Filtra i dati in base alla parte per popolare i filtri
+  const filteredData = selectedPart === 'all' 
+    ? OPERE_DATA 
+    : OPERE_DATA.filter(item => item.parte === parseInt(selectedPart, 10));
+
+  filteredData.forEach(item => {
     if (item.autore) authors.add(item.autore);
     if (item.periodo) periods.add(item.periodo);
     if (item.tecnica) techniques.add(item.tecnica);
@@ -195,6 +220,11 @@ function buildFilters() {
     opt.title = tech;
     filterTechnique.appendChild(opt);
   });
+
+  // Ripristina i valori precedentemente selezionati se esistono ancora nella lista
+  if ([...filterAuthor.options].some(o => o.value === prevAuthor)) filterAuthor.value = prevAuthor;
+  if ([...filterPeriod.options].some(o => o.value === prevPeriod)) filterPeriod.value = prevPeriod;
+  if ([...filterTechnique.options].some(o => o.value === prevTech)) filterTechnique.value = prevTech;
 }
 
 // ==========================================================================
@@ -202,6 +232,12 @@ function buildFilters() {
 // ==========================================================================
 function initDeck() {
   let tempDeck = [...OPERE_DATA];
+  
+  // Applica filtro parte globale
+  if (selectedPart !== 'all') {
+    const partNum = parseInt(selectedPart, 10);
+    tempDeck = tempDeck.filter(item => item.parte === partNum);
+  }
   
   // Apply current study filter
   if (studyFilter === 'known') {
@@ -446,10 +482,25 @@ function resetStats() {
 
 // Update UI stats indicators
 function updateStats() {
-  statKnownCount.textContent = knownSet.size;
-  statUnknownCount.textContent = unknownSet.size;
-  statStarredCount.textContent = starredSet.size;
-  filterStarredCount.textContent = starredSet.size;
+  // Contiamo le opere nel mazzo filtrato per parte
+  const filteredIDs = new Set(
+    selectedPart === 'all'
+      ? OPERE_DATA.map(item => item.id)
+      : OPERE_DATA.filter(item => item.parte === parseInt(selectedPart, 10)).map(item => item.id)
+  );
+
+  let knownPartCount = 0;
+  let unknownPartCount = 0;
+  let starredPartCount = 0;
+
+  knownSet.forEach(id => { if (filteredIDs.has(id)) knownPartCount++; });
+  unknownSet.forEach(id => { if (filteredIDs.has(id)) unknownPartCount++; });
+  starredSet.forEach(id => { if (filteredIDs.has(id)) starredPartCount++; });
+
+  statKnownCount.textContent = knownPartCount;
+  statUnknownCount.textContent = unknownPartCount;
+  statStarredCount.textContent = starredPartCount;
+  filterStarredCount.textContent = starredPartCount;
 }
 
 // Update Progress Bar
@@ -461,16 +512,26 @@ function updateProgressBar() {
     return;
   }
   
-  // We count the total items evaluated in this study session relative to total items
-  const studiedTotal = knownSet.size + unknownSet.size;
-  const totalItems = OPERE_DATA.length;
+  // We count the total items evaluated in this study session relative to total items in this part
+  const filteredIDs = new Set(
+    selectedPart === 'all'
+      ? OPERE_DATA.map(item => item.id)
+      : OPERE_DATA.filter(item => item.parte === parseInt(selectedPart, 10)).map(item => item.id)
+  );
+  
+  let studiedInPart = 0;
+  filteredIDs.forEach(id => {
+    if (knownSet.has(id) || unknownSet.has(id)) studiedInPart++;
+  });
+  
+  const totalItemsInPart = filteredIDs.size;
   
   // Progress in current deck
   const currentNum = currentIndex + 1;
   progressCount.textContent = `${currentNum} / ${deck.length}`;
   
-  // Global completion percentage
-  const globalPercent = Math.min(Math.round((studiedTotal / totalItems) * 100), 100);
+  // Global completion percentage for this part
+  const globalPercent = Math.min(Math.round((studiedInPart / totalItemsInPart) * 100), 100);
   progressPercent.textContent = `${globalPercent}%`;
   
   // Progress bar based on current card index progress
@@ -491,6 +552,12 @@ function renderLibraryGrid() {
   const selectedTech = filterTechnique.value;
   
   let matches = OPERE_DATA.filter(item => {
+    // Applica filtro parte globale in Galleria
+    if (selectedPart !== 'all') {
+      const partNum = parseInt(selectedPart, 10);
+      if (item.parte !== partNum) return false;
+    }
+    
     // Search match (checks author, title, technique, period, ID)
     const matchesSearch = !searchVal || 
       (item.autore && item.autore.toLowerCase().includes(searchVal)) ||
@@ -508,6 +575,16 @@ function renderLibraryGrid() {
   });
   
   libraryResultsCount.textContent = matches.length;
+  
+  // Aggiorna il totale dinamico
+  const totalCountEl = document.getElementById('library-total-count');
+  if (totalCountEl) {
+    if (selectedPart === 'all') {
+      totalCountEl.textContent = OPERE_DATA.length;
+    } else {
+      totalCountEl.textContent = OPERE_DATA.filter(item => item.parte === parseInt(selectedPart, 10)).length;
+    }
+  }
   
   if (matches.length === 0) {
     libraryGrid.innerHTML = `
@@ -559,7 +636,7 @@ function openModal(item) {
   modalTitle.textContent = item.titolo || "Senza Titolo";
   modalTechnique.textContent = item.tecnica || "Tecnica non specificata";
   modalPeriod.textContent = item.periodo || "Periodo non specificato";
-  modalIndex.textContent = `Opera ${item.id} di 107`;
+  modalIndex.textContent = `Opera ${item.id} di ${OPERE_DATA.length}`;
   
   detailModal.classList.add('active');
   document.body.style.overflow = 'hidden'; // prevent background scrolling
@@ -578,6 +655,29 @@ function setupEventListeners() {
   if (btnThemeToggle) {
     btnThemeToggle.addEventListener('click', toggleTheme);
   }
+
+  // Part Selector buttons click listeners
+  const partBtns = document.querySelectorAll('.part-btn');
+  partBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      partBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      selectedPart = btn.getAttribute('data-part');
+      try {
+        localStorage.setItem('gagliano_selected_part', selectedPart);
+      } catch (err) {
+        console.warn("Storage non accessibile, preferenza parte non salvata:", err);
+      }
+      
+      // Re-initialize and update views
+      initDeck();
+      renderCard();
+      buildFilters(); // Rebuild dropdown options for selected part
+      renderLibraryGrid();
+      updateStats(); // Update dashboard and progress
+    });
+  });
 
   // Navigation Tabs
   btnStudyMode.addEventListener('click', () => {
