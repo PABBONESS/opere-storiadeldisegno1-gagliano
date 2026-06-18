@@ -3,7 +3,7 @@ let deck = [];
 let currentIndex = 0;
 let isFlipped = false;
 let isShuffled = false;
-let isStarredOnly = false;
+let studyFilter = 'all'; // 'all', 'known', 'unknown', 'starred'
 
 // User sets (stored by item ID)
 let knownSet = new Set();
@@ -153,14 +153,26 @@ function buildFilters() {
 function initDeck() {
   let tempDeck = [...OPERE_DATA];
   
-  // Filter by starred only if active
-  if (isStarredOnly) {
+  // Apply current study filter
+  if (studyFilter === 'known') {
+    tempDeck = tempDeck.filter(item => knownSet.has(item.id));
+    if (tempDeck.length === 0) {
+      alert("Non hai ancora segnato nessuna opera come 'Lo So'!");
+      studyFilter = 'all';
+      tempDeck = [...OPERE_DATA];
+    }
+  } else if (studyFilter === 'unknown') {
+    tempDeck = tempDeck.filter(item => unknownSet.has(item.id));
+    if (tempDeck.length === 0) {
+      alert("Non ci sono opere da rivedere! Ottimo lavoro!");
+      studyFilter = 'all';
+      tempDeck = [...OPERE_DATA];
+    }
+  } else if (studyFilter === 'starred') {
     tempDeck = tempDeck.filter(item => starredSet.has(item.id));
     if (tempDeck.length === 0) {
-      // Fallback if no starred items
-      alert("Non ci sono opere nella lista di ripasso (Salvate). Aggiungi qualche opera cliccando sulla stella!");
-      isStarredOnly = false;
-      btnFilterStarred.classList.remove('active');
+      alert("Non hai ancora salvato nessuna opera! Clicca sulla stella per salvare quelle più difficili.");
+      studyFilter = 'all';
       tempDeck = [...OPERE_DATA];
     }
   }
@@ -175,6 +187,57 @@ function initDeck() {
   }
   
   currentIndex = 0;
+  syncStudyFilterUI();
+}
+
+// Helper to toggle study filters
+function toggleStudyFilter(filter) {
+  if (studyFilter === filter) {
+    studyFilter = 'all';
+  } else {
+    studyFilter = filter;
+  }
+  initDeck();
+  renderCard();
+}
+
+// Sync visual active states for dashboard and banner
+function syncStudyFilterUI() {
+  const cardKnown = document.querySelector('.stat-card.known');
+  const cardUnknown = document.querySelector('.stat-card.unknown');
+  const cardStarred = document.querySelector('.stat-card.starred');
+  
+  cardKnown.classList.remove('active');
+  cardUnknown.classList.remove('active');
+  cardStarred.classList.remove('active');
+  
+  const banner = document.getElementById('study-filter-banner');
+  const bannerText = document.getElementById('study-filter-text');
+  
+  banner.className = 'study-filter-banner';
+  
+  if (studyFilter === 'all') {
+    banner.style.display = 'none';
+  } else {
+    banner.style.display = 'flex';
+    if (studyFilter === 'known') {
+      cardKnown.classList.add('active');
+      bannerText.textContent = "Lo So 👍";
+      banner.classList.add('filter-known');
+    } else if (studyFilter === 'unknown') {
+      cardUnknown.classList.add('active');
+      bannerText.textContent = "Da Rivedere 👎";
+      banner.classList.add('filter-unknown');
+    } else if (studyFilter === 'starred') {
+      cardStarred.classList.add('active');
+      bannerText.textContent = "Salvati ⭐";
+      banner.classList.add('filter-starred');
+    }
+  }
+  
+  if (btnFilterStarred) {
+    btnFilterStarred.classList.toggle('active', studyFilter === 'starred');
+  }
 }
 
 // Fisher-Yates Shuffle Algorithm
@@ -311,7 +374,7 @@ function toggleStar() {
   
   // If we are studying only starred items and we unstarred the last one,
   // we need to rebuild the deck.
-  if (isStarredOnly && !starredSet.has(item.id)) {
+  if (studyFilter === 'starred' && !starredSet.has(item.id)) {
     setTimeout(() => {
       initDeck();
       renderCard();
@@ -511,16 +574,17 @@ function setupEventListeners() {
     renderCard();
   });
   
-  // Filter Starred Toggle
+  // Dashboard Stat Cards Filtering Click Handlers
+  document.querySelector('.stat-card.known').addEventListener('click', () => toggleStudyFilter('known'));
+  document.querySelector('.stat-card.unknown').addEventListener('click', () => toggleStudyFilter('unknown'));
+  document.querySelector('.stat-card.starred').addEventListener('click', () => toggleStudyFilter('starred'));
+  
+  // Active Filter Banner Clear Link
+  document.getElementById('btn-clear-study-filter').addEventListener('click', () => toggleStudyFilter('all'));
+  
+  // Filter Starred Toggle (from secondary controls)
   btnFilterStarred.addEventListener('click', () => {
-    isStarredOnly = !isStarredOnly;
-    if (isStarredOnly) {
-      btnFilterStarred.classList.add('active');
-    } else {
-      btnFilterStarred.classList.remove('active');
-    }
-    initDeck();
-    renderCard();
+    toggleStudyFilter('starred');
   });
   
   // Reset Stats
