@@ -51,8 +51,8 @@ const OPERE_DATA = [
   {
     "id": 7,
     "immagine": "Opera7.png",
-    "autore": "L'EDUCAZIONE DI MARIA",
-    "titolo": "PITTORE TEDESCO",
+    "autore": "PITTORE TEDESCO",
+    "titolo": "L'EDUCAZIONE DI MARIA",
     "tecnica": "PENNA E INCHIOSTRO NERO",
     "periodo": "IL MEDIOEVO IN EUROPA"
   },
@@ -84,7 +84,7 @@ const OPERE_DATA = [
     "id": 11,
     "immagine": "Opera11.png",
     "autore": "PISANELLO",
-    "titolo": "STDI DI NUDO E UN'ANNUNCIAZIONE",
+    "titolo": "STUDI DI NUDO E UN'ANNUNCIAZIONE",
     "tecnica": "PENNA E INCHIOSTRO",
     "periodo": "IL MEDIOEVO IN EUROPA"
   },
@@ -107,7 +107,7 @@ const OPERE_DATA = [
   {
     "id": 14,
     "immagine": "Opera14.png",
-    "autore": "PAOLO UCCELLLO",
+    "autore": "PAOLO UCCELLO",
     "titolo": "PROFILO CON TURBANTE",
     "tecnica": "BISTRO E ACQUERELLO SU CARTA TINTA",
     "periodo": "LA PRIMA RINASCENZA"
@@ -212,7 +212,7 @@ const OPERE_DATA = [
     "id": 27,
     "immagine": "Opera27.png",
     "autore": "GIOVANNI BELLINI",
-    "titolo": "RITRATTO DI GENTILE BELLINI",
+    "titolo": "PIETÀ",
     "tecnica": "MATITA NERA",
     "periodo": "LA PRIMA RINASCENZA"
   },
@@ -220,7 +220,7 @@ const OPERE_DATA = [
     "id": 28,
     "immagine": "Opera28.png",
     "autore": "GIOVANNI BELLINI",
-    "titolo": "PIETÀ",
+    "titolo": "RITRATTO DI GENTILE BELLINI",
     "tecnica": "PENNA E INCHIOSTRO BRUNO",
     "periodo": "LA PRIMA RINASCENZA"
   },
@@ -372,7 +372,7 @@ const OPERE_DATA = [
     "id": 47,
     "immagine": "Opera47.png",
     "autore": "RAFFAELLO",
-    "titolo": "DONNA CHE LEGGE UN BAMBINO",
+    "titolo": "DONNA CHE LEGGE A UN BAMBINO",
     "tecnica": "PUNTA METALLICA, RIALZATA DI BIANCO",
     "periodo": "IL CINQUECENTO DA FIRENZE A ROMA"
   },
@@ -779,16 +779,16 @@ const OPERE_DATA = [
   {
     "id": 98,
     "immagine": "Opera98.png",
-    "autore": "HENDRICK GOLTZIUS",
-    "titolo": "PAESAGGIO CON ALBERI",
+    "autore": "FRANCOIS CLOUET",
+    "titolo": "RITRATTO DI GENTILUOMO",
     "tecnica": "PENNA, PENNELLO E INCHIOSTRO BRUNO",
     "periodo": "IL CINQUECENTO IN EUROPA"
   },
   {
     "id": 99,
     "immagine": "Opera99.png",
-    "autore": "FRANCOIS CLOUET",
-    "titolo": "RITRATTO DI GENTILUOMO",
+    "autore": "HENDRICK GOLTZIUS",
+    "titolo": "PAESAGGIO CON ALBERI",
     "tecnica": "GESSETTO NERO E ROSSO",
     "periodo": "IL CINQUECENTO IN EUROPA"
   },
